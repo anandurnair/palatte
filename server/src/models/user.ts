@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 const userSchema = new Schema({
+  profileImg : String,
   fullname: String,
   username: String,
   email: String,
@@ -11,6 +12,11 @@ const userSchema = new Schema({
   freelance: {
     type: Boolean,
     default: false,
+  },
+  status:{
+    type: String,
+    enum: ["active", "blocked"],
+    default: "active"
   },
   isBlocked: {
     type: Boolean,

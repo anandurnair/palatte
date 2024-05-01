@@ -1,18 +1,20 @@
-import express from "express";
-const cors = require("cors");
+import express, { Application, json, urlencoded } from "express";
+import cors from "cors";
 import userRouter from "./src/routes/userRoutes";
 import dbConnect from "./src/config/db";
-const app: express.Application = express();
-import bodyParser from 'body-parser'
-const PORT = 4000;
-app.use(cors());
-app.use(express.json());
+import adminRouter from "./src/routes/adminRoutes";
+require('dotenv').config();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const app: Application = express();
+const PORT = 4000;
+
+app.use(cors());
+app.use(json({ limit: '50mb' }));
+app.use(urlencoded({ limit: '50mb', extended: true }));
 app.use(userRouter);
+app.use(adminRouter);
 
 app.listen(PORT, () => {
   dbConnect();
-  console.log(`running on port ${PORT}`);
+  console.log(`Running on port ${PORT}`);
 });
