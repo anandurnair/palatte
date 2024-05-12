@@ -9,10 +9,28 @@ const userSchema = new Schema({
   bio:String,
   phone: Number,
   country: String,
+  followers : [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+    }
+  ],
+  following :[
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+    }
+  ],
   freelance: {
     type: Boolean,
     default: false,
   },
+  saved:[
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Posts",
+    }
+  ],
   status:{
     type: String,
     enum: ["active", "blocked"],
@@ -24,6 +42,6 @@ const userSchema = new Schema({
   },
 });
 
-const UserModal = mongoose.models.Users || mongoose.model("Users", userSchema);
+const UserModel = mongoose.models.Users || mongoose.model("Users", userSchema);
 
-export default UserModal;
+export default UserModel;

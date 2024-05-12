@@ -3,40 +3,54 @@ import UserModal from "../models/user";
 const userController: any = {};
 const nodemailer = require("nodemailer");
 import bcrypt from "bcrypt";
-const {cloudinary} = require('../utils/cloudinary') 
+const { cloudinary } = require("../utils/cloudinary");
 const jwt = require("jsonwebtoken");
-const {generateToken} = require('../utils/jwtHelper')
+const { generateToken } = require("../utils/jwtHelper");
+import STATUS_CODES from "../utils/constants";
+import fetch from "node-fetch"; // Import node-fetch
+import PostModel from "../models/post";
+
 let generatedOTP: string = "";
 let otpGeneratedTime: Number;
 const generateOTP = () => {
   otpGeneratedTime = Date.now();
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
-  
-userController.loginData = async (                                                      
+
+userController.loginData = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    console.log("working");
     const { email, password } = req.body;
-    const user = await UserModal.findOne({ email: email });
+    const user = await UserModal.findOne({ email: email }).populate("saved");
+
     if (!user) {
-      return res.status(400).json({ error: "User not exist" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "User not exist" });
     }
     const passwordsMatch = await bcrypt.compare(password, user.password);
     if (!passwordsMatch) {
-      return res.status(400).json({ error: "Inavaid password" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "Inavaid password" });
     }
-    const token = await generateToken(user)
-    res.cookie('auth_token', token, {
-      maxAge: 60 * 60 * 24 * 7, // Set cookie expiration (adjust as needed)
-    });
-
-    res.status(200).json({ message: "User created successfully!" ,user,token});
+    if (user.isBlocked) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "User Blocked" });
+    }
+    const token = generateToken(user);
+    console.log("logged successfully");
+    res
+      .status(STATUS_CODES.OK)
+      .json({ message: "User created successfully!", user, token });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -45,8 +59,6 @@ userController.signupData = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("working");
-
     const {
       fullname,
       email,
@@ -55,17 +67,41 @@ userController.signupData = async (
     const isExist = await UserModal.findOne({ email });
 
     if (isExist) {
-      console.log("Is exists : ", isExist);
-      return res.status(400).json({ error: "user already exists" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "user already exists" });
     }
-    console.log('working it')
     sendEmail(email);
 
     let user = { fullname, email, password };
-    res.status(200).json({ message: "User created successfully!", user });
+    res
+      .status(STATUS_CODES.OK)
+      .json({ message: "User created successfully!", user });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+userController.getUserById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId } = req.query;
+
+    const user = await UserModal.findById(userId).populate("saved");
+    const posts = await PostModel.find({ userId });
+    res
+      .status(STATUS_CODES.OK)
+      .json({ message: "USER DETAILS FETCHED SUCCESSFULLY", user, posts });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -89,7 +125,6 @@ const sendEmail = async (email: string) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
   }
@@ -101,13 +136,14 @@ userController.resendOTP = async (
 ): Promise<any> => {
   try {
     const { tempUser } = req.body;
-    console.log("Email : ", tempUser);
     const { email } = tempUser;
-    generatedOTP =''
+    generatedOTP = "";
     sendEmail(email);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -118,24 +154,23 @@ userController.verifyOTP = async (
   try {
     const { OTP, tempUser } = req.body;
     let newTime = Date.now();
-    console.log("New Time : ", newTime);
-    console.log("Old time : ", otpGeneratedTime);
+
     let timeDifference: Number =
       (Number(newTime) - Number(otpGeneratedTime)) / 1000;
-    console.log("Difference : ", timeDifference);
 
     let isExpired = Number(timeDifference) > 60;
 
     const isOtpValid = OTP === generatedOTP;
     if (!isOtpValid) {
-      console.log("verification failed");
-      return res.status(400).json({ error: "OTP VERIFICATION FAILED" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "OTP VERIFICATION FAILED" });
     }
     if (isExpired) {
-      console.log("OTP Expired");
-      return res.status(400).json({ error: "OTP EXPIRED" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "OTP EXPIRED" });
     }
-    console.log("Verification successfull");
     const { fullname, email, password } = tempUser;
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser: any = new UserModal({
@@ -144,11 +179,17 @@ userController.verifyOTP = async (
       password: hashedPassword,
     });
     await newUser.save();
+    const user = await UserModal.findOne({ email });
+    const token = generateToken(user);
 
-    res.status(200).json({ message: "OTP VERIFICATION SUCCESSFULL ", newUser });
+    res
+      .status(STATUS_CODES.OK)
+      .json({ message: "OTP VERIFICATION SUCCESSFULL ", user, token });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -157,8 +198,6 @@ userController.createProfile = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("working createProfile");
-
     const {
       profilePic,
       email,
@@ -170,33 +209,97 @@ userController.createProfile = async (
       isFreelance,
       selectedKeys,
     } = req.body;
-    console.log('bio',email)
-    const uploadedImg = await cloudinary.uploader.upload(profilePic)
-    console.log("photo :", uploadedImg.url);
+
+    const isUser = await UserModal.findOne({ username });
+
+    if (isUser) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "Username already exists" });
+    }
+
+    const uploadedImg = await cloudinary.uploader.upload(profilePic, {
+      folder: "profile",
+    });
+
     const user = await UserModal.findOne({ email: email });
-    console.log("user : ", user);
+
+    if (!user) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "User not found" });
+    }
+
+    const newUser = await UserModal.findByIdAndUpdate(
+      user._id,
+      {
+        profileImg: uploadedImg.url,
+        fullname,
+        username,
+        phone,
+        country,
+        bio,
+        freelance: isFreelance,
+      },
+      { new: true }
+    );
+
+    const updatedUser = await UserModal.findOne({ email });
+    if (!newUser) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "Error during profile update" });
+    }
+
+    res
+      .status(STATUS_CODES.OK)
+      .json({ message: "Profile created successfully", updatedUser });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+//Edit Profile
+
+userController.editProfile = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { profilePic, email, fullname, username, bio, phone, country } =
+      req.body;
+
+    const isUser = await UserModal.findOne({ username });
+    const uploadedImg = await cloudinary.uploader.upload(profilePic);
+    const user = await UserModal.findOne({ email: email });
     const newUser: any = await UserModal.findByIdAndUpdate(user._id, {
-      profileImg : uploadedImg.url,
+      profileImg: uploadedImg.url,
       fullname,
       username,
       phone,
       country,
       bio,
-      freelance: isFreelance,
     });
 
     if (!newUser) {
-      return res.status(400).json({ error: "ERROR DURING PROFILE CREATION" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "ERROR DURING PROFILE EDIT" });
     }
 
     const updatedUser = await UserModal.findOne({ email: email });
 
-    console.log('worked create profile',newUser)
-    console.log('worked create profile 2 :',updatedUser)
-    res.status(200).json({ message: "PROFILE CREATED SUCCESSFULLY",updatedUser });
+    res
+      .status(STATUS_CODES.OK)
+      .json({ message: "PROFILE CREATED SUCCESSFULLY", updatedUser });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -206,15 +309,16 @@ userController.userDetails = async (
 ): Promise<any> => {
   try {
     const { email } = req.query;
-    const user = await UserModal.findOne({ email: email });
-    console.log(user);
+    const user = await UserModal.findOne({ email: email }).populate("saved");
 
     res
-      .status(200)
+      .status(STATUS_CODES.OK)
       .json({ message: "USER DETAILS FETCHED SUCCESSFULLY", user });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -224,48 +328,55 @@ userController.changePassword = async (
 ): Promise<any> => {
   try {
     const { email, oldPassword, newPassword } = req.body;
-    console.log(email, oldPassword, newPassword);
-    
+
     const user = await UserModal.findOne({ email: email });
     if (!user) {
-      return res.status(400).json({ error: "Invalid User" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "Invalid User" });
     }
 
     const passwordsMatch = await bcrypt.compare(oldPassword, user.password);
     if (!passwordsMatch) {
-      return res.status(400).json({ error: "Invalid password" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "Invalid password" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await UserModal.findByIdAndUpdate(user._id, { password: hashedPassword });
-    
-    return res.status(200).json({ message: "Password updated successfully" });
+
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ message: "Password updated successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
-
 
 userController.forgotPassword = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    console.log('forgot password is working')
     const { email } = req.body;
-    console.log(email)
     const user = await UserModal.findOne({ email: email });
     if (!user) {
-      return res.status(400).json({ error: "INVALID USER" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "INVALID USER" });
     }
     sendEmail(email);
-    console.log('otp sended')
-    res.status(200).json({ message: "OTP SENT" });
+    res.status(STATUS_CODES.OK).json({ message: "OTP SENT" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -275,30 +386,33 @@ userController.verifyPasswordOTP = async (
 ): Promise<any> => {
   try {
     const { OTP, email } = req.body;
-    console.log('verify otp is working')
 
     let newTime = Date.now();
-    console.log("New Time : ", newTime);
-    console.log("Old time : ", otpGeneratedTime);
+
     let timeDifference: Number =
       (Number(newTime) - Number(otpGeneratedTime)) / 1000;
-    console.log("Difference : ", timeDifference);
 
     let isExpired = Number(timeDifference) > 60;
 
     const isOtpValid = OTP === generatedOTP;
     if (!isOtpValid) {
-      console.log("verification failed");
-      return res.status(400).json({ error: "OTP VERIFICATION FAILED" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "OTP VERIFICATION FAILED" });
     }
     if (isExpired) {
-      console.log("OTP Expired");
-      return res.status(400).json({ error: "OTP EXPIRED" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "OTP EXPIRED" });
     }
-    return res.status(200).json({ messsge: "VERIFICATION SUCCESSFULL" });
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ messsge: "VERIFICATION SUCCESSFULL" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
@@ -307,22 +421,144 @@ userController.resetPassword = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log('reset password is working')
-
     const { email, newPassword } = req.body;
     const user = await UserModal.findOne({ email: email });
     if (!user) {
-    return res.status(400).json({ error: "Invalid User" });
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ error: "Invalid User" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await UserModal.findByIdAndUpdate(user._id, { password: hashedPassword });
-   return res.status(200).json({ message: "PASSWORD UPDATED SUCCESSFULLY" });
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ message: "PASSWORD UPDATED SUCCESSFULLY" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
   }
 };
 
+userController.searchUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { username } = req.body;
+    const prefix = username.trim();
+    const regex = new RegExp("^" + prefix, "i");
+    const users = await UserModal.find({ username: regex });
+
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ message: "Searched successfully", users });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+userController.followUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { currentUserId, userId } = req.body;
+
+    const currentUser = await UserModal.findById(currentUserId);
+
+    if (!currentUser) {
+      return res.status(STATUS_CODES.OK).json({ error: "User not found" });
+    }
+    console.log(currentUser);
+
+    const isFollowed = currentUser.following.includes(userId);
+    console.log("Is followed", isFollowed, userId);
+
+    if (!isFollowed) {
+      await UserModal.findOneAndUpdate(
+        { _id: currentUserId },
+        { $push: { following: userId } } 
+      );
+      await UserModal.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        { $push: { followers: currentUserId } }
+      );
+      const user = await UserModal.findById(currentUserId);
+      return res
+        .status(STATUS_CODES.OK)
+        .json({ message: "Followed", user });
+    } else {
+      await UserModal.findOneAndUpdate(
+        { _id: currentUserId },
+        { $pull: { following: userId } } 
+      );
+      await UserModal.findByIdAndUpdate(
+        {
+          _id: userId,
+        },
+        { $pull: { followers: currentUserId } }
+      );
+      const user = await UserModal.findById(currentUserId);
+      return res
+        .status(STATUS_CODES.OK)
+        .json({ message: "Unfollowed", user });
+    }
+   
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+
+userController.getFollowers  = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const {userId} = req.query
+    const user = await UserModal.findById(userId).populate('followers')
+    const followers = user.followers
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ message: " successfully fetched followers", followers });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+
+userController.getFollowing  = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    
+    const {userId} = req.query
+    const user = await UserModal.findById(userId).populate('following')
+    const following = user.following
+    return res
+      .status(STATUS_CODES.OK)
+      .json({ message: " successfully fetched followings",following  });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
 module.exports = userController;
