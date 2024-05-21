@@ -9,7 +9,7 @@ const { generateToken } = require("../utils/jwtHelper");
 import STATUS_CODES from "../utils/constants";
 import fetch from "node-fetch"; // Import node-fetch
 import PostModel from "../models/post";
-
+import CollectionModel from "../models/collections";
 let generatedOTP: string = "";
 let otpGeneratedTime: Number;
 const generateOTP = () => {
@@ -17,43 +17,44 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-userController.loginData = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
+
+
+userController.loginData = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
-    const user = await UserModal.findOne({ email: email }).populate("saved");
+    const user = await UserModal.findOne({ email }).populate('services');
 
     if (!user) {
-      return res
-        .status(STATUS_CODES.BAD_REQUEST)
-        .json({ error: "User not exist" });
+      return res.status(400).json({ error: "User not exist" });
     }
+
     const passwordsMatch = await bcrypt.compare(password, user.password);
     if (!passwordsMatch) {
-      return res
-        .status(STATUS_CODES.BAD_REQUEST)
-        .json({ error: "Inavaid password" });
+      return res.status(400).json({ error: "Invalid password" });
     }
+
     if (user.isBlocked) {
-      return res
-        .status(STATUS_CODES.BAD_REQUEST)
-        .json({ error: "User Blocked" });
+      return res.status(400).json({ error: "User Blocked" });
     }
+
     const token = generateToken(user);
-    console.log("logged successfully");
-    res
-      .status(STATUS_CODES.OK)
-      .json({ message: "User created successfully!", user, token });
+    console.log("Logged in successfully");
+
+    const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
+    const allSaved = allSavedPosts ? allSavedPosts.posts : [];
+
+    const userWithSavedPosts = {
+      ...user.toObject(),
+      allSaved
+    };
+    console.log("user with saved posts ;" ,userWithSavedPosts)
+
+    res.status(200).json({ message: "User logged in successfully!", user: userWithSavedPosts, token });
   } catch (error) {
     console.error(error);
-    res
-      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
-      .json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
 userController.signupData = async (
   req: Request,
   res: Response
@@ -92,11 +93,19 @@ userController.getUserById = async (
   try {
     const { userId } = req.query;
 
-    const user = await UserModal.findById(userId).populate("saved");
+    const user = await UserModal.findById(userId)
+    .populate('services')
     const posts = await PostModel.find({ userId });
+    const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
+    const allSaved = allSavedPosts ? allSavedPosts.posts : [];
+
+    const userWithSavedPosts = {
+      ...user.toObject(),
+      allSaved
+    };
     res
       .status(STATUS_CODES.OK)
-      .json({ message: "USER DETAILS FETCHED SUCCESSFULLY", user, posts });
+      .json({ message: "USER DETAILS FETCHED SUCCESSFULLY", user:userWithSavedPosts, posts });
   } catch (error) {
     console.error(error);
     res
@@ -182,9 +191,25 @@ userController.verifyOTP = async (
     const user = await UserModal.findOne({ email });
     const token = generateToken(user);
 
+    
+    const allCollection = new CollectionModel({ name: 'All', user: user._id, isDefault: true });
+    await allCollection.save();
+    console.log('All collections ',allCollection)
+    user.allCollection = allCollection._id;
+    user.savedCollections.push(allCollection._id);
+    await user.save();
+
+    const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
+    const allSaved = allSavedPosts ? allSavedPosts.posts : [];
+
+    const userWithSavedPosts = {
+      ...user.toObject(),
+      allSaved
+    };
+
     res
       .status(STATUS_CODES.OK)
-      .json({ message: "OTP VERIFICATION SUCCESSFULL ", user, token });
+      .json({ message: "OTP VERIFICATION SUCCESSFULL ", user :userWithSavedPosts, token });
   } catch (error) {
     console.error(error);
     res
@@ -229,7 +254,7 @@ userController.createProfile = async (
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "User not found" });
     }
-
+      console.log("services : ",selectedKeys)
     const newUser = await UserModal.findByIdAndUpdate(
       user._id,
       {
@@ -240,11 +265,13 @@ userController.createProfile = async (
         country,
         bio,
         freelance: isFreelance,
+        services : selectedKeys
       },
       { new: true }
     );
 
     const updatedUser = await UserModal.findOne({ email });
+    
     if (!newUser) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -269,9 +296,13 @@ userController.editProfile = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { profilePic, email, fullname, username, bio, phone, country } =
+    const { profilePic, email, fullname, username, bio, phone, country,updatedServices } =
       req.body;
-
+      console.log("services :",updatedServices)
+      let freelance = true
+    if(updatedServices.length === 0){
+      freelance = false
+    }
     const isUser = await UserModal.findOne({ username });
     const uploadedImg = await cloudinary.uploader.upload(profilePic);
     const user = await UserModal.findOne({ email: email });
@@ -282,6 +313,8 @@ userController.editProfile = async (
       phone,
       country,
       bio,
+      freelance,
+      services : updatedServices
     });
 
     if (!newUser) {
@@ -291,7 +324,7 @@ userController.editProfile = async (
     }
 
     const updatedUser = await UserModal.findOne({ email: email });
-
+    console.log('updated User' ,updatedUser)
     res
       .status(STATUS_CODES.OK)
       .json({ message: "PROFILE CREATED SUCCESSFULLY", updatedUser });
@@ -309,11 +342,18 @@ userController.userDetails = async (
 ): Promise<any> => {
   try {
     const { email } = req.query;
-    const user = await UserModal.findOne({ email: email }).populate("saved");
+    const user = await UserModal.findOne({ email })
+    .populate('services')
+    const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
+    const allSaved = allSavedPosts ? allSavedPosts.posts : [];
 
+    const userWithSavedPosts = {
+      ...user.toObject(),
+      allSaved
+    };
     res
       .status(STATUS_CODES.OK)
-      .json({ message: "USER DETAILS FETCHED SUCCESSFULLY", user });
+      .json({ message: "USER DETAILS FETCHED SUCCESSFULLY", user :userWithSavedPosts});
   } catch (error) {
     console.error(error);
     res

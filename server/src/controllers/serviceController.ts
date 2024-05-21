@@ -12,13 +12,13 @@ serviceController.createService = async (
      const {serviceName} = req.body;
      const isExist = await ServiceModal.findOne({serviceName});
      if(isExist){
-        res.status(STATUS_CODES.BAD_REQUEST).json({error:"Service already exists"})
+       return res.status(STATUS_CODES.BAD_REQUEST).json({error:"Service already exists"})
      }
      const newService: any = new ServiceModal({
         serviceName
       });
       await newService.save();
-      res.status(STATUS_CODES.OK).json({ message: "User created successfully!"});
+      return res.status(STATUS_CODES.OK).json({ message: "User created successfully!"});
     } catch (error) {
       console.error(error);
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
@@ -38,3 +38,6 @@ serviceController.createService = async (
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
     }
   };
+
+
+  export default serviceController

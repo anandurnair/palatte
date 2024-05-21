@@ -1,40 +1,42 @@
 import mongoose, { Schema } from "mongoose";
 
 const userSchema = new Schema({
-  profileImg : String,
+  profileImg: String,
   fullname: String,
   username: String,
   email: String,
   password: String,
-  bio:String,
+  bio: String,
   phone: Number,
   country: String,
-  followers : [
+  followers: [
     {
       type: Schema.Types.ObjectId,
       ref: "Users",
-    }
+    },
   ],
-  following :[
+  following: [
     {
       type: Schema.Types.ObjectId,
       ref: "Users",
-    }
+    },
   ],
   freelance: {
     type: Boolean,
     default: false,
   },
-  saved:[
+  services: [
     {
       type: Schema.Types.ObjectId,
-      ref: "Posts",
-    }
+      ref: "Services",
+    },
   ],
-  status:{
+  savedCollections: [{ type: Schema.Types.ObjectId, ref: 'Collections' }],
+  allCollection: { type: Schema.Types.ObjectId, ref: 'Collections' },
+  status: {
     type: String,
     enum: ["active", "blocked"],
-    default: "active"
+    default: "active",
   },
   isBlocked: {
     type: Boolean,

@@ -5,7 +5,8 @@ const serviceSchema = new Schema({
         type : String,
     },
     unlisted : {
-        type:Boolean
+        type:Boolean,
+        default : false
     }
 });
 

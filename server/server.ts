@@ -5,6 +5,7 @@ import userRouter from "./src/routes/userRoutes";
 import dbConnect from "./src/config/db";
 import adminRouter from "./src/routes/adminRoutes";
 import postRouter from "./src/routes/postRouter";
+import serviceRouter from "./src/routes/servicRoutes";
 require('dotenv').config();
 
 const app: Application = express();
@@ -16,6 +17,7 @@ app.use(urlencoded({ limit: '50mb', extended: true }));
 app.use(userRouter);
 app.use(adminRouter);
 app.use(postRouter)
+app.use(serviceRouter)
 
 app.listen(PORT, () => {
   dbConnect();
