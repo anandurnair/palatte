@@ -39,5 +39,20 @@ serviceController.createService = async (
     }
   };
 
+  serviceController.deleteService =  async (                                                      
+    req: Request,
+    res: Response
+  ): Promise<any> => {
+    try {
+        const serviceId :any = req.query.serviceId
+        
+     const services = await ServiceModal.findOneAndDelete(serviceId);
+      res.status(STATUS_CODES.OK).json({ message: "Service deleted successfully!"});
+    } catch (error) {
+      console.error(error);
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+    }
+  };
+
 
   export default serviceController

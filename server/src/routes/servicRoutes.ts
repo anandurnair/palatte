@@ -6,6 +6,6 @@ import serviceController from '../controllers/serviceController'
 
 serviceRouter.get('/getServices',serviceController.serviceList)
 serviceRouter.post('/addService',serviceController.createService)
-
+serviceRouter.delete('/delete-service',serviceController.deleteService)
 
 export default serviceRouter;

@@ -10,6 +10,8 @@ import STATUS_CODES from "../utils/constants";
 import fetch from "node-fetch"; // Import node-fetch
 import PostModel from "../models/post";
 import CollectionModel from "../models/collections";
+import UserRepository from "../repositories/UserRepository";
+
 let generatedOTP: string = "";
 let otpGeneratedTime: Number;
 const generateOTP = () => {
@@ -191,10 +193,9 @@ userController.verifyOTP = async (
     const user = await UserModal.findOne({ email });
     const token = generateToken(user);
 
-    
+    console.log('user id : ',user._id)
     const allCollection = new CollectionModel({ name: 'All', user: user._id, isDefault: true });
     await allCollection.save();
-    console.log('All collections ',allCollection)
     user.allCollection = allCollection._id;
     user.savedCollections.push(allCollection._id);
     await user.save();

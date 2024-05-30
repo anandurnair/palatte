@@ -37,7 +37,7 @@ commentController.addComment = async (
     const comments = await CommentModel.find({ postId, parentCommentId: null })
       .populate("userId").populate({
         path: 'replies',
-        populate: { path: 'replies' }, // Adjust this to handle deeper nesting if needed
+        populate: { path: 'replies' }, 
       }).sort({ _id: -1 });
     res
       .status(STATUS_CODES.OK)
@@ -78,7 +78,7 @@ commentController.addReply = async (
     const comments = await CommentModel.find({ postId, parentCommentId: null })
     .populate("userId").populate({
       path: 'replies',
-      populate: { path: 'replies' }, // Adjust this to handle deeper nesting if needed
+      populate: { path: 'replies' }, 
     }).sort({ _id: -1 });
     
     res
@@ -107,8 +107,8 @@ commentController.getPostComment = async (
     .populate({
       path: 'replies',
       populate: {
-        path: 'userId', // Populate the userId field in replies
-        model: 'Users', // Assuming 'Users' is the model name for users
+        path: 'userId', 
+        model: 'Users', 
       },
     })
     .sort({ _id: -1 });
@@ -149,14 +149,18 @@ commentController.deleteComment = async (
 ): Promise<any> => {
   try {
     const { commentId } = req.query;
+    console.log('cpmmmet id : ',commentId)
+    console.log("Delete working")
     const isExist = await CommentModel.findById(commentId);
+  
+    console.log("isExist : ",isExist)
     if (!isExist) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "Comment is not found" });
     }
     await CommentModel.findByIdAndDelete(commentId);
-
+    await ReportedCommentsModal.findOneAndDelete({commentId})
     res
       .status(STATUS_CODES.OK)
       .json({ message: "Comment successfully deleted" });

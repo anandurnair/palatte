@@ -67,11 +67,11 @@ postController.likePost = async (req: Request, res: Response): Promise<any> => {
     const { userId, postId } = req.body;
     const post = await PostModel.findById(postId);
     if (!post) {
-      res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Post is not found" });
+    return  res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Post is not found" });
     }
     await PostModel.findByIdAndUpdate(postId, { $push: { likes: userId } });
     const posts = await PostModel.find();
-    res.status(STATUS_CODES.OK).json({ message: "Liked successfully", posts });
+   return res.status(STATUS_CODES.OK).json({ message: "Liked successfully", posts });
   } catch (error) {
     console.error(error);
     res
@@ -90,13 +90,13 @@ postController.unlikePost = async (
     const { userId, postId } = req.body;
     const post = await PostModel.findById(postId);
     if (!post) {
-      res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Post is not found" });
+     return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Post is not found" });
     }
 
     await PostModel.findByIdAndUpdate(postId, { $pull: { likes: userId } });
     const posts = await PostModel.find();
 
-    res
+  return  res
       .status(STATUS_CODES.OK)
       .json({ message: "unliked successfully", posts });
   } catch (error) {
@@ -149,7 +149,7 @@ postController.getPostDetail = async (
     }
     const commets = await CommentModel.find({ postId }).populate("userId");
     console.log("comments : ", commets);
-
+    console.log('post details working')
     return res
       .status(STATUS_CODES.OK)
       .json({ message: "Post data fetched", commets, post });
@@ -337,6 +337,32 @@ postController.deletePost = async (
   }
 };
 
+
+//list post
+
+postController.listPost = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const postId = req.query.postId;
+    const post = await PostModel.findById(postId);
+    if(post.unListed){  
+      await PostModel.findByIdAndUpdate(postId, {
+        unListed :false
+      });
+    }else{
+      await PostModel.findByIdAndUpdate(postId, {
+        unListed :true
+      });
+    }
+   
+    res.status(STATUS_CODES.OK).json({ message: "Post updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
 //Report post
 
 postController.reportPost = async (
@@ -360,11 +386,12 @@ postController.reportPost = async (
 
     console.log("count reports : ", distinctUserCount);
 
-    if (distinctUserCount === 3 && distinctUserCount > 3) {
-      await CommentModel.deleteMany({ postId });
-      await ReportedPostsModal.deleteMany({ postId });
-      await PostModel.findByIdAndDelete(postId);
+    if (distinctUserCount === 2 || distinctUserCount > 2){
+      console.log("report post working")
+      await PostModel.findByIdAndUpdate(postId,{unListed:true});
     }
+    
+    
     res.status(STATUS_CODES.OK).json({ message: "Post reported" });
   } catch (error) {
     console.error(error);
@@ -431,11 +458,19 @@ postController.getAllPosts = async (
   try {
     console.log("post fetched");
 
-    const posts = await PostModel.find().sort({ _id: -1 }).populate("userId");
+    let posts = await PostModel.find().sort({ _id: -1 }).populate("userId");
+
+    // Create a new array of posts with comment counts
+    const postsWithCommentCounts = await Promise.all(
+      posts.map(async (post) => {
+        const commentCount = await CommentModel.countDocuments({ postId: post._id });
+        return { ...post._doc, commentCount }; // Spread operator to merge post document and comment count
+      })
+    );
     console.log("posts", posts);
     res
       .status(STATUS_CODES.OK)
-      .json({ message: "Data fetched successfully", posts });
+      .json({ message: "Data fetched successfully", posts :postsWithCommentCounts });
   } catch (error) {
     console.error(error);
     res
