@@ -4,6 +4,11 @@ const adminController: any = {};
 import bcrypt from "bcrypt";
 import ServiceModal from "../models/service";
 import STATUS_CODES from "../utils/constants";
+import UserModel from "../models/user";
+import CommentModel from "../models/comment";
+import LikeModal from "../models/like";
+import PostModel from "../models/post";
+
 
 const adminUsername = "admin123";
 const adminPassword = "123";
@@ -88,5 +93,33 @@ adminController.blockUser = async (
       .json({ error: "Internal server error" });
   }
 };
+
+
+
+adminController.listCounts =async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const usersCount = await UserModal.countDocuments();
+    const postCount = await PostModel.countDocuments();
+    const freelancersCount = await UserModal.countDocuments({freelance:true})
+    const commentCount = await CommentModel.countDocuments();
+
+
+      return res
+        .status(STATUS_CODES.OK)
+        .json({ message: "Data fetched successfully", usersCount,postCount,freelancersCount,commentCount });
+   
+     
+   
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
 
 module.exports = adminController;

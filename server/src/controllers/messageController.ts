@@ -5,7 +5,7 @@ import STATUS_CODES from "../utils/constants";
 import ConversationModal from "../models/conversation";
 import MessageModel from "../models/message";
 import GroupConversationModal from "../models/groupConversation";
-
+import NotificationModel from "../models/notifications";
 const messageController: any = {};
 
 //start converstation
@@ -30,12 +30,10 @@ messageController.startConversation = async (
     });
     const savedConversation = await newConversation.save();
     console.log(newConversation);
-    res
-      .status(STATUS_CODES.OK)
-      .json({
-        message: "conversation created successfully",
-        conversation: savedConversation,
-      });
+    res.status(STATUS_CODES.OK).json({
+      message: "conversation created successfully",
+      conversation: savedConversation,
+    });
   } catch (error) {
     console.error(error);
     res
@@ -164,7 +162,6 @@ messageController.deleteMessage = async (
 ): Promise<any> => {
   try {
     const messageId = req.query.messageId;
-    console.log("workin", messageId);
     const message = await MessageModel.findById(messageId);
     console.log(message);
     if (!message) {
@@ -174,6 +171,100 @@ messageController.deleteMessage = async (
     }
     await MessageModel.findByIdAndDelete(messageId);
     return res.status(200).json({ message: "Message Deleted" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+//Notifications
+
+messageController.postNotification = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId, text, user } = req.body;
+    const newNotification = new NotificationModel({
+      toUser: userId,
+      text,
+      fromUser: user._id,
+    });
+    await newNotification.save();
+    return res.status(200).json({ message: "Notification added" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+messageController.getNotification = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const userId = req.query.userId;
+    console.log("user  id : ", userId);
+    const notifications = await NotificationModel.find({
+      toUser: userId,
+    }).populate("fromUser");
+    console.log("Notifications :", notifications);
+    return res
+      .status(200)
+      .json({ message: "Notification fetched", notifications });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+messageController.removeNotification = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const index = parseInt(req.query.index as string, 10);
+    const userId = req.query.userId as string;
+
+    if (isNaN(index)) {
+      return res.status(400).json({ error: "Invalid index parameter" });
+    }
+
+    const notifications = await NotificationModel.find({ toUser: userId }).exec();
+
+    if (index < 0 || index >= notifications.length) {
+      return res.status(400).json({ error: "Index out of range" });
+    }
+
+    const notificationId = notifications[index]._id;
+    await NotificationModel.findByIdAndDelete(notificationId);
+
+    return res.status(200).json({ message: "Notification deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+  }
+};
+
+
+messageController.removeAllNotifications = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const userId = req.query.userId;
+    const notifications = await NotificationModel.deleteMany({
+      toUser: userId,
+    })
+    return res
+      .status(200)
+      .json({ message: "Notifications cleared" });
   } catch (error) {
     console.error(error);
     res

@@ -11,7 +11,7 @@ import fetch from "node-fetch"; // Import node-fetch
 import PostModel from "../models/post";
 import CollectionModel from "../models/collections";
 import UserRepository from "../repositories/UserRepository";
-
+import Joi from 'joi'
 let generatedOTP: string = "";
 let otpGeneratedTime: Number;
 const generateOTP = () => {
