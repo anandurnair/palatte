@@ -21,16 +21,13 @@ const userSchema = new Schema({
       ref: "Users",
     },
   ],
-  freelance: {
-    type: Boolean,
-    default: false,
-  },
-  services: [
-    {
+ 
+  wallet :{
+    
       type: Schema.Types.ObjectId,
-      ref: "Services",
-    },
-  ],
+      ref: "Wallet",
+    
+  },
   savedCollections: [{ type: Schema.Types.ObjectId, ref: 'Collections' }],
   allCollection: { type: Schema.Types.ObjectId, ref: 'Collections' },
   status: {

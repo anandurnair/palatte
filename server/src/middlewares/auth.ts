@@ -12,11 +12,15 @@ const verifyToken = async(req: Request, res: Response, next: NextFunction): Prom
     return;
   }
   const token: string = authorizationHeader.split(' ')[1];
+  console.log('worked',token);
+  
   try {
     const decoded: DecodedToken = verify(token);
     const {userId} : any = decoded;
+    console.log("User id ",userId)
     const user = await userRepository.findById(userId)
-    if(user.isBlocked){
+    console.log('working : ',user)
+    if(user?.isBlocked){
         return res.status(400).json({ message: "User is blocked" });
     }
     next();

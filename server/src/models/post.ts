@@ -2,7 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const postSchema = new Schema({
   caption: String,
- 
   userId: {
     type: Schema.Types.ObjectId,
     ref: "Users",
@@ -24,3 +23,4 @@ const postSchema = new Schema({
 
 const PostModel = mongoose.models.Posts ||   mongoose.model("Posts",postSchema)
 export default PostModel;
+

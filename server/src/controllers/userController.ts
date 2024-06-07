@@ -11,6 +11,7 @@ import fetch from "node-fetch"; // Import node-fetch
 import PostModel from "../models/post";
 import CollectionModel from "../models/collections";
 import UserRepository from "../repositories/UserRepository";
+import WalletModel from "../models/wallet";
 import Joi from 'joi'
 let generatedOTP: string = "";
 let otpGeneratedTime: Number;
@@ -24,8 +25,8 @@ const generateOTP = () => {
 userController.loginData = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
-    const user = await UserModal.findOne({ email }).populate('services');
-
+    const user = await UserModal.findOne({ email }).populate('wallet')
+    console.log("Users : ",user)
     if (!user) {
       return res.status(400).json({ error: "User not exist" });
     }
@@ -95,8 +96,8 @@ userController.getUserById = async (
   try {
     const { userId } = req.query;
 
-    const user = await UserModal.findById(userId)
-    .populate('services')
+    const user = await UserModal.findById(userId).populate('wallet')
+    
     const posts = await PostModel.find({ userId });
     const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
     const allSaved = allSavedPosts ? allSavedPosts.posts : [];
@@ -190,7 +191,7 @@ userController.verifyOTP = async (
       password: hashedPassword,
     });
     await newUser.save();
-    const user = await UserModal.findOne({ email });
+    let user = await UserModal.findOne({ email });
     const token = generateToken(user);
 
     console.log('user id : ',user._id)
@@ -200,9 +201,19 @@ userController.verifyOTP = async (
     user.savedCollections.push(allCollection._id);
     await user.save();
 
+    const newWallet  = new WalletModel({
+      user:user._id
+    })
+    await newWallet.save()
+
+    const walletId =  await WalletModel.findOne({user :user._id});
+    await UserModal.findByIdAndUpdate(user._id,{wallet : walletId?._id})
+
     const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
     const allSaved = allSavedPosts ? allSavedPosts.posts : [];
 
+     user = await UserModal.findOne({ email }).populate('wallet');
+    
     const userWithSavedPosts = {
       ...user.toObject(),
       allSaved
@@ -232,8 +243,7 @@ userController.createProfile = async (
       bio,
       phone,
       country,
-      isFreelance,
-      selectedKeys,
+      
     } = req.body;
 
     const isUser = await UserModal.findOne({ username });
@@ -255,7 +265,6 @@ userController.createProfile = async (
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "User not found" });
     }
-      console.log("services : ",selectedKeys)
     const newUser = await UserModal.findByIdAndUpdate(
       user._id,
       {
@@ -265,8 +274,7 @@ userController.createProfile = async (
         phone,
         country,
         bio,
-        freelance: isFreelance,
-        services : selectedKeys
+     
       },
       { new: true }
     );
@@ -297,13 +305,9 @@ userController.editProfile = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { profilePic, email, fullname, username, bio, phone, country,updatedServices } =
+    const { profilePic, email, fullname, username, bio, phone, country } =
       req.body;
-      console.log("services :",updatedServices)
-      let freelance = true
-    if(updatedServices.length === 0){
-      freelance = false
-    }
+  
     const isUser = await UserModal.findOne({ username });
     const uploadedImg = await cloudinary.uploader.upload(profilePic);
     const user = await UserModal.findOne({ email: email });
@@ -314,8 +318,7 @@ userController.editProfile = async (
       phone,
       country,
       bio,
-      freelance,
-      services : updatedServices
+      
     });
 
     if (!newUser) {
@@ -343,8 +346,8 @@ userController.userDetails = async (
 ): Promise<any> => {
   try {
     const { email } = req.query;
-    const user = await UserModal.findOne({ email })
-    .populate('services')
+    const user = await UserModal.findOne({ email }).populate('wallet')
+    console.log("user : ",user)
     const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
     const allSaved = allSavedPosts ? allSavedPosts.posts : [];
 
@@ -363,20 +366,20 @@ userController.userDetails = async (
   }
 };
 
+//change password
+
 userController.changePassword = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
     const { email, oldPassword, newPassword } = req.body;
-
     const user = await UserModal.findOne({ email: email });
     if (!user) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "Invalid User" });
     }
-
     const passwordsMatch = await bcrypt.compare(oldPassword, user.password);
     if (!passwordsMatch) {
       return res
