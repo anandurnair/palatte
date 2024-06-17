@@ -6,6 +6,7 @@ import ConversationModal from "../models/conversation";
 import MessageModel from "../models/message";
 import GroupConversationModal from "../models/groupConversation";
 import NotificationModel from "../models/notifications";
+import CallsModel from "../models/calls";
 const messageController: any = {};
 
 //start converstation
@@ -19,7 +20,7 @@ messageController.startConversation = async (
     const existingConversation = await ConversationModal.findOne({
       members: { $all: [req.body.senderId, req.body.receiverId] },
     });
-    console.log("is conversation exists : ", existingConversation);
+   
     if (existingConversation) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -44,10 +45,7 @@ messageController.startConversation = async (
 
 //get conversation
 
-messageController.getConversation = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
+messageController.getConversation = async (req: Request, res: Response): Promise<any> => {
   try {
     const userId = req.params.userId;
     if (!userId) {
@@ -56,19 +54,51 @@ messageController.getConversation = async (
         .json({ error: "User ID is required" });
     }
 
-    const conversation = await ConversationModal.find({
+    const conversations = await ConversationModal.find({
       members: { $in: [userId] },
     });
 
-    if (!conversation) {
+    if (!conversations || conversations.length === 0) {
       return res
         .status(STATUS_CODES.NOT_FOUND)
         .json({ message: "No conversations found" });
     }
 
+    
+
+    const updatedConversations = await Promise.all(conversations.map(async (conversation: any) => {
+      const messages = await MessageModel.find({ conversationId: conversation._id });
+    
+      // Check if messages exist
+      if (messages.length > 0) {
+        const lastSender = messages[messages.length - 1].sender;
+    
+        const unreadMessageCount = await MessageModel.countDocuments({ 
+          conversationId: conversation._id, 
+          status: "delivered" 
+        });
+    
+        return { 
+          ...conversation._doc, 
+          unreadCount: unreadMessageCount, 
+          lastSenderId: lastSender 
+        };
+      } else {
+        return { 
+          ...conversation._doc, 
+          unreadCount: 0, 
+          lastSenderId: null 
+        };
+      }
+    }));
+    
+
+    //last sender
+
+
     res
       .status(STATUS_CODES.OK)
-      .json({ message: "Conversation fetched successfully", conversation });
+      .json({ message: "Conversation fetched successfully", conversations: updatedConversations });
   } catch (error) {
     console.error("Error fetching conversation:", error);
     res
@@ -76,6 +106,7 @@ messageController.getConversation = async (
       .json({ error: "Internal server error" });
   }
 };
+
 
 //Group conversation
 
@@ -273,4 +304,68 @@ messageController.removeAllNotifications = async (
   }
 };
 
+messageController.updateMessageStatus= async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const {conversationId,senderId} = req.body;
+    await MessageModel.updateMany({ conversationId,sender : {$ne : senderId} }, { status: "seen" });   
+     return res
+      .status(200)
+      .json({ message: "Notifications cleared" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+messageController.saveCalls = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const members = req.body;
+    console.log("Calling memebers : ",members)
+    const newCall = new CallsModel({
+      members,
+    }); 
+    const savedCall = await newCall.save();
+
+     return res
+      .status(200)
+      .json({ message: "Call saved" });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+
+messageController.getCallHistory = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    
+  const {userId} = req.query;
+  
+  console.log("calss woerkign",userId)
+    const calls = await CallsModel.find({members:{$in : userId}}).populate({
+      path: "members",
+      model: UserModal    });
+      console.log("calls :",calls)
+     return res
+      .status(200)
+      .json({ message: "Calls fetched successfully" ,calls });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
 export default messageController;

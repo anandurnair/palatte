@@ -8,7 +8,7 @@ import UserModel from "../models/user";
 import CommentModel from "../models/comment";
 import LikeModal from "../models/like";
 import PostModel from "../models/post";
-
+import OrderModel from "../models/orders";
 
 const adminUsername = "admin123";
 const adminPassword = "123";
@@ -94,25 +94,79 @@ adminController.blockUser = async (
   }
 };
 
-
-
-adminController.listCounts =async (
+adminController.listCounts = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
     const usersCount = await UserModal.countDocuments();
     const postCount = await PostModel.countDocuments();
-    const freelancersCount = await UserModal.countDocuments({freelance:true})
+    const orderCount = await OrderModel.countDocuments();
     const commentCount = await CommentModel.countDocuments();
 
+    return res
+      .status(STATUS_CODES.OK)
+      .json({
+        message: "Data fetched successfully",
+        usersCount,
+        postCount,
+        orderCount,
+        commentCount,
+      });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
 
-      return res
-        .status(STATUS_CODES.OK)
-        .json({ message: "Data fetched successfully", usersCount,postCount,freelancersCount,commentCount });
-   
-     
-   
+adminController.getTransactions = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const orders = await OrderModel.find({status:"completed"})
+
+    return res
+      .status(STATUS_CODES.OK)
+      .json({
+        message: "Data fetched successfully",
+        orders
+      });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+adminController.getServiceCounts = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const allServices = await ServiceModal.find(); 
+      const completedOrders = await OrderModel.find({ status: "completed" });
+
+      const serviceOrderCount = allServices.map((service :any) => ({
+        serviceName: service.serviceName,
+        orderCount: 0
+      }));
+
+      completedOrders.forEach(order => {
+        const service = serviceOrderCount.find(s => s.serviceName === order.serviceName);
+        if (service) {
+          service.orderCount += 1;
+        }
+      });
+    return res
+      .status(STATUS_CODES.OK)
+      .json({
+        message: "Data fetched successfully",
+        serviceOrderCount
+      });
   } catch (error) {
     console.error(error);
     res

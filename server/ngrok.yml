@@ -1,0 +1,10 @@
+version: "2"
+authtoken: "2hjh1iDMmtUKrjfrXbPQFAKWm3g_4FokuNziJgzMuhmXXRNbn"
+
+tunnels:
+  webhook1:
+    addr: 4000
+    proto: http
+  webhook2:
+    addr: 4000
+    proto: http

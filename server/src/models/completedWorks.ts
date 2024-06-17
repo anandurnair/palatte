@@ -6,7 +6,7 @@ const completedWorksSchema = new Schema({
     ref: "Orders",
     required: true,
   },
-  Image: {
+  image: {
     type: String,
     required: true,
   },

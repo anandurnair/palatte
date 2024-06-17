@@ -20,9 +20,11 @@ conversationRouter.get('/conversation/group/:userId', messageController.getGroup
 conversationRouter.post('/messages',messageController.sendMessage);
 conversationRouter.get('/messages/:conversationId',messageController.getMessages)
 conversationRouter.delete('/delete-message',messageController.deleteMessage);
+conversationRouter.patch('/update-message-status',messageController.updateMessageStatus)
 //group  conversation 
 
-
+conversationRouter.post('/saveCalls',messageController.saveCalls)
+conversationRouter.get('/get-call-history',messageController.getCallHistory)
 //Notifications
 
 conversationRouter.post('/post-notification',messageController.postNotification)

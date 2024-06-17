@@ -17,6 +17,11 @@ const messageSchema = new Schema({
     type: Date,
     default: Date.now(),
   },
+  status :{
+    type : String,
+    enum : ["seen","delivered"],
+    default : "delivered"
+  }
 });
 
 const MessageModel = mongoose.models.Message || mongoose.model('Message', messageSchema);

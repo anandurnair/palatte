@@ -26,7 +26,6 @@ userController.loginData = async (req: Request, res: Response): Promise<any> => 
   try {
     const { email, password } = req.body;
     const user = await UserModal.findOne({ email }).populate('wallet')
-    console.log("Users : ",user)
     if (!user) {
       return res.status(400).json({ error: "User not exist" });
     }
@@ -41,7 +40,6 @@ userController.loginData = async (req: Request, res: Response): Promise<any> => 
     }
 
     const token = generateToken(user);
-    console.log("Logged in successfully");
 
     const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
     const allSaved = allSavedPosts ? allSavedPosts.posts : [];
@@ -50,7 +48,6 @@ userController.loginData = async (req: Request, res: Response): Promise<any> => 
       ...user.toObject(),
       allSaved
     };
-    console.log("user with saved posts ;" ,userWithSavedPosts)
 
     res.status(200).json({ message: "User logged in successfully!", user: userWithSavedPosts, token });
   } catch (error) {
@@ -194,7 +191,6 @@ userController.verifyOTP = async (
     let user = await UserModal.findOne({ email });
     const token = generateToken(user);
 
-    console.log('user id : ',user._id)
     const allCollection = new CollectionModel({ name: 'All', user: user._id, isDefault: true });
     await allCollection.save();
     user.allCollection = allCollection._id;
@@ -278,7 +274,8 @@ userController.createProfile = async (
       },
       { new: true }
     );
-
+    
+    
     const updatedUser = await UserModal.findOne({ email });
     
     if (!newUser) {
@@ -328,7 +325,6 @@ userController.editProfile = async (
     }
 
     const updatedUser = await UserModal.findOne({ email: email });
-    console.log('updated User' ,updatedUser)
     res
       .status(STATUS_CODES.OK)
       .json({ message: "PROFILE CREATED SUCCESSFULLY", updatedUser });
@@ -347,7 +343,6 @@ userController.userDetails = async (
   try {
     const { email } = req.query;
     const user = await UserModal.findOne({ email }).populate('wallet')
-    console.log("user : ",user)
     const allSavedPosts = await CollectionModel.findOne({ user: user._id, name: 'All' })
     const allSaved = allSavedPosts ? allSavedPosts.posts : [];
 
@@ -496,7 +491,7 @@ userController.searchUser = async (
     const prefix = username.trim();
     const regex = new RegExp("^" + prefix, "i");
     const users = await UserModal.find({ username: regex });
-
+    
     return res
       .status(STATUS_CODES.OK)
       .json({ message: "Searched successfully", users });
@@ -520,10 +515,8 @@ userController.followUser = async (
     if (!currentUser) {
       return res.status(STATUS_CODES.OK).json({ error: "User not found" });
     }
-    console.log(currentUser);
 
     const isFollowed = currentUser.following.includes(userId);
-    console.log("Is followed", isFollowed, userId);
 
     if (!isFollowed) {
       await UserModal.findOneAndUpdate(
@@ -557,7 +550,7 @@ userController.followUser = async (
         .json({ message: "Unfollowed", user });
     }
    
-  } catch (error) {
+  } catch (error) { 
     console.error(error);
     res
       .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
