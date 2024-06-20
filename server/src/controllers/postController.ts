@@ -21,16 +21,13 @@ const formatDate = (date: any) => {
 };
 postController.addPost = async (req: Request, res: Response): Promise<any> => {
   try {
-    console.log("Workinggg");
     const { userId, caption, images } = req.body;
-    console.log("caption", caption);
     const user = await UserModal.findById(userId);
     if (!user) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "Invalid User" });
     }
-    console.log("Img url : ", images);
     const uploadedImgs = await Promise.all(
       images.map(async (image: string) => {
         const uploadResponse = await cloudinary.uploader.upload(image, {
@@ -39,7 +36,6 @@ postController.addPost = async (req: Request, res: Response): Promise<any> => {
         return uploadResponse.url; 
       })
     );
-    console.log("url :", uploadedImgs);
     const formattedDate = formatDate(new Date());
     const newPost = new PostModel({
       caption,
@@ -64,8 +60,11 @@ postController.addPost = async (req: Request, res: Response): Promise<any> => {
 //like post
 postController.likePost = async (req: Request, res: Response): Promise<any> => {
   try {
+    console.log("Liked post");
+    
     const { userId, postId } = req.body;
     const post = await PostModel.findById(postId);
+    console.log("post : ",post)
     if (!post) {
     return  res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Post is not found" });
     }
@@ -86,6 +85,7 @@ postController.unlikePost = async (
   req: Request,
   res: Response
 ): Promise<any> => {
+  console.log("unliked post");
   try {
     const { userId, postId } = req.body;
     const post = await PostModel.findById(postId);
@@ -114,12 +114,9 @@ postController.getUserPosts = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("workied");
 
     const { userId } = req.query;
-    console.log(userId);
     const posts = await PostModel.find({ userId });
-    console.log("posts :", posts);
 
     res
       .status(STATUS_CODES.OK)
@@ -141,15 +138,13 @@ postController.getPostDetail = async (
   try {
     const { postId } = req.query;
     const post = await PostModel.findById(postId).populate("userId");
-    console.log("posts : ", post);
     if (!post) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "Post is not found" });
     }
     const commets = await CommentModel.find({ postId }).populate("userId");
-    console.log("comments : ", commets);
-    console.log('post details working')
+    
     return res
       .status(STATUS_CODES.OK)
       .json({ message: "Post data fetched", commets, post });
@@ -166,8 +161,7 @@ postController.getPostDetail = async (
 postController.savePost = async (req: Request, res: Response): Promise<any> => {
   try {
     const { postId, userId, collectionName } = req.body;
-    console.log("post ID : ", postId, userId, collectionName);
-
+    console.log(postId,userId,collectionName)
     const user = await UserModal.findById(userId);
     if (!user) {
       return res
@@ -264,16 +258,13 @@ postController.getAllSavedPosts = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("saved post working");
     const { userId } = req.query;
-    console.log("User Id :", userId);
     const collections = await CollectionModel.find({ user: userId }).populate(
       "posts"
     );
     const allSavedPosts = await CollectionModel.find({ user: userId }).populate(
       "posts"
     );
-    console.log("savedPosts : ", allSavedPosts);
 
     return res
       .status(STATUS_CODES.OK)
@@ -293,12 +284,9 @@ postController.getCollections = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("saved post working");
     const { userId } = req.query;
-    console.log("User Id :", userId);
     const collections = await CollectionModel.find({ user: userId });
     const collectionNames = collections.map((item) => item.name);
-    console.log("collection names : ", collectionNames);
     return res
       .status(STATUS_CODES.OK)
       .json({ message: "Post data fetched", collectionNames });
@@ -371,7 +359,6 @@ postController.reportPost = async (
 ): Promise<any> => {
   try {
     const { postId, userId, reason } = req.body;
-    console.log(postId, userId, reason);
 
     const post = await PostModel.findById(postId);
     if (!post) {
@@ -384,10 +371,8 @@ postController.reportPost = async (
       await ReportedPostsModal.distinct("userId", { postId })
     ).length;
 
-    console.log("count reports : ", distinctUserCount);
 
     if (distinctUserCount === 2 || distinctUserCount > 2){
-      console.log("report post working")
       await PostModel.findByIdAndUpdate(postId,{unListed:true});
     }
     
@@ -456,7 +441,6 @@ postController.getAllPosts = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("post fetched");
 
     let posts = await PostModel.find().sort({ _id: -1 }).populate("userId");
 
@@ -467,7 +451,6 @@ postController.getAllPosts = async (
         return { ...post._doc, commentCount }; // Spread operator to merge post document and comment count
       })
     );
-    console.log("posts", posts);
     res
       .status(STATUS_CODES.OK)
       .json({ message: "Data fetched successfully", posts :postsWithCommentCounts });

@@ -62,6 +62,7 @@ const getUser = (userId: string) => {
 };
 
 const removeUser = (socketId: string) => {
+  
   users = users.filter((user) => user.socketId !== socketId);
 };
 
@@ -69,6 +70,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("addUser", (userId: string) => {
     addUser(userId, socket.id);
     io.emit("getUsers", users);
+    
   });
 
   // Send and get message
@@ -88,58 +90,49 @@ io.on("connection", (socket: Socket) => {
   socket.on("like", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} liked your post`);
     let text = `${currentUser.username} liked your post`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
 
   socket.on("comment", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} commented on your post`);
     let text = `${currentUser.username}  commented on your  post`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
 
   socket.on("call", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} is calling`);
     let text = `${currentUser.username} is calling...`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("order", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} send new order`);
     let text = `${currentUser.username} send new order`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("payment", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} payment completed`);
     let text = `${currentUser.username} payment completed`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
 
   socket.on("approve", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} approved the work`);
     let text = `${currentUser.username} approved the work`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("accept", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} accepted the order`);
     let text = `${currentUser.username}  accepted the order`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("upload", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} uploaded the work`);
     let text = `${currentUser.username} uploaded the work`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("reject", (currentUser: any, userId: any) => {
     console.log(`${currentUser.username} rejected the order`);
     let text = `${currentUser.username} rejected the order`;
-    console.log("user id :", userId);
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("seen", (data:any) => {

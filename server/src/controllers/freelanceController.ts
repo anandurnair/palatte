@@ -932,7 +932,6 @@ freelanceController.deleteReview = async (
 
 const handleCheckoutSessionCompleted = async (session: any) => {
   const userId = session.metadata.userId;
-  console.log("Metta data : ",session.metadata)
   const newAmount = parseInt(session.amount)
   const addAmount = newAmount / 100;
 
@@ -964,7 +963,6 @@ const handleCheckoutSessionCompleted = async (session: any) => {
     });
 
     await wallet.save();
-    console.log(`Amount added successfully to user ${userId}'s wallet`);
   } catch (error: any) {
     console.error(`Failed to handle checkout.session.completed: ${error.message}`);
   }
@@ -986,7 +984,6 @@ const handleOrderPayment = async (session: any) => {
       remainingRevisions: order.plan.revision,
     });
 
-    console.log(`Order payment successful`);
   } catch (error: any) {
     console.error(`Failed to handle checkout.session.completed: ${error.message}`);
   }
@@ -995,14 +992,11 @@ const handleOrderPayment = async (session: any) => {
 freelanceController.webhook = async (req: Request, res: Response): Promise<any> => {
   try {
     const sig = req.headers["stripe-signature"] as string;
-    console.log("Signature : ",sig)
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET1!;
 
     const event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    console.log("Event  :",event)
     if (event.type === "payment_intent.succeeded") {
       const session = event.data.object;
-      console.log("Session :",session)
       if(session.metadata.method =="wallet"){
 
         await handleCheckoutSessionCompleted(session);
@@ -1024,7 +1018,6 @@ freelanceController.webhook = async (req: Request, res: Response): Promise<any> 
 freelanceController.servicePaymentByStripe = async (req: Request, res: Response): Promise<any> => {
   try {
     const { orderId, clientId, freelancerId, amount } = req.body;
-    console.log("Freelancer id : ",freelancerId)
     if (typeof amount === 'undefined') {
       return res.status(400).json({ error: 'Amount is required' });
     }
@@ -1082,20 +1075,4 @@ freelanceController.servicePaymentByStripeWebhook = async (req: Request, res: Re
   }
 };
 export default freelanceController;
-// const session = await stripe.checkout.sessions.create({
-//   payment_method_types: ['card'],
-//   line_items: [{
-//     price_data: {
-//       currency: 'inr',
-//       product_data: {
-//         name: 'Wallet Top-up',
-//       },
-//       unit_amount: addAmount * 100,
-//     },
-//     quantity: 1,
-//   }],
-//   mode: 'payment',
-//   success_url: 'http://localhost:3000/success',
-//   cancel_url: 'http://localhost:3000/cancel',
-// });
-//  return  res.status(STATUS_CODES.OK).json({message:'Order deleted successfully',id: session.id});
+

@@ -23,9 +23,9 @@ commentController.addComment = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("working commnet");
+    console.log('comment added');
+    
     const { postId, userId, comment } = req.body;
-    console.log(postId, userId, comment);
     const newComment = new CommentModel({
       postId,
       userId,
@@ -112,7 +112,6 @@ commentController.getPostComment = async (
       },
     })
     .sort({ _id: -1 });
-    console.log("Comments of a post : ", comments);
     res
       .status(STATUS_CODES.OK)
       .json({ message: "Comments successfully fetched", comments });
@@ -149,11 +148,9 @@ commentController.deleteComment = async (
 ): Promise<any> => {
   try {
     const { commentId } = req.query;
-    console.log('cpmmmet id : ',commentId)
-    console.log("Delete working")
+  
     const isExist = await CommentModel.findById(commentId);
   
-    console.log("isExist : ",isExist)
     if (!isExist) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -180,7 +177,6 @@ commentController.reportComment = async (
   ): Promise<any> => {
     try {
       const {commentId,postId,userId,reason} = req.body;
-      console.log(commentId,postId,userId,reason);
       
       const comment = await CommentModel.findById(commentId)
       if(!comment){
@@ -191,7 +187,6 @@ commentController.reportComment = async (
   
       const distinctUserCount = (await ReportedCommentsModal.distinct("userId", {commentId })).length;
   
-       console.log("count reports : ",distinctUserCount);
       
       if(distinctUserCount === 3 && distinctUserCount > 3) {
         await CommentModel.findByIdAndDelete(commentId );
@@ -214,7 +209,6 @@ commentController.reportComment = async (
     try {
       
       const allReports = await ReportedCommentsModal.find().sort({_id:-1}).populate('userId').populate('postId').populate('commentId')
-      console.log(allReports)
       const reportedComments = allReports.map((report)=>{
         return {
           reportId : report._id,  

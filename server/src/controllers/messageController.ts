@@ -30,7 +30,6 @@ messageController.startConversation = async (
       members: [req.body.senderId, req.body.receiverId],
     });
     const savedConversation = await newConversation.save();
-    console.log(newConversation);
     res.status(STATUS_CODES.OK).json({
       message: "conversation created successfully",
       conversation: savedConversation,
@@ -116,7 +115,6 @@ messageController.createGroupConversation = async (
 ) => {
   const { groupName, members, admin, description, groupImage } = req.body;
   members.push(admin);
-  console.log("group info : ", req.body);
   const newConversation = new GroupConversationModal({
     groupName,
     members,
@@ -153,9 +151,7 @@ messageController.sendMessage = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("Body :", req.body);
     const { conversationId, sender, text }: any = req.body;
-    console.log("conversation Id : ", conversationId);
     const newMessage = new MessageModel({ conversationId, sender, text });
     const savedMessage = await newMessage.save();
     res
@@ -194,7 +190,6 @@ messageController.deleteMessage = async (
   try {
     const messageId = req.query.messageId;
     const message = await MessageModel.findById(messageId);
-    console.log(message);
     if (!message) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)
@@ -239,11 +234,9 @@ messageController.getNotification = async (
 ): Promise<any> => {
   try {
     const userId = req.query.userId;
-    console.log("user  id : ", userId);
     const notifications = await NotificationModel.find({
       toUser: userId,
     }).populate("fromUser");
-    console.log("Notifications :", notifications);
     return res
       .status(200)
       .json({ message: "Notification fetched", notifications });
@@ -327,7 +320,6 @@ messageController.saveCalls = async (
 ): Promise<any> => {
   try {
     const members = req.body;
-    console.log("Calling memebers : ",members)
     const newCall = new CallsModel({
       members,
     }); 
@@ -353,11 +345,9 @@ messageController.getCallHistory = async (
     
   const {userId} = req.query;
   
-  console.log("calss woerkign",userId)
     const calls = await CallsModel.find({members:{$in : userId}}).populate({
       path: "members",
       model: UserModal    });
-      console.log("calls :",calls)
      return res
       .status(200)
       .json({ message: "Calls fetched successfully" ,calls });
