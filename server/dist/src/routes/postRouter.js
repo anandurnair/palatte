@@ -1,0 +1,33 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var express_1 = __importDefault(require("express"));
+var postRouter = express_1.default.Router();
+var postController_1 = __importDefault(require("../controllers/postController"));
+var commentController_1 = __importDefault(require("../controllers/commentController"));
+postRouter.post('/add-post', postController_1.default.addPost);
+postRouter.get('/get-all-posts', postController_1.default.getAllPosts);
+postRouter.post('/add-comment', commentController_1.default.addComment);
+postRouter.post('/add-reply', commentController_1.default.addReply);
+postRouter.get('/get-post-comment', commentController_1.default.getPostComment);
+postRouter.get('/get-all-comments', commentController_1.default.getAllComments);
+postRouter.get('/get-user-posts', postController_1.default.getUserPosts);
+postRouter.post('/save-post', postController_1.default.savePost);
+postRouter.get('/get-all-saved-posts', postController_1.default.getAllSavedPosts);
+postRouter.post('/remove-save-Post', postController_1.default.removeSavePost);
+postRouter.post('/like-post', postController_1.default.likePost);
+postRouter.post('/unlike-post', postController_1.default.unlikePost);
+postRouter.get('/get-post-details', postController_1.default.getPostDetail);
+postRouter.delete('/delete-post', postController_1.default.deletePost);
+postRouter.post('/report-post', postController_1.default.reportPost);
+postRouter.get('/get-all-reportedPosts', postController_1.default.getReportedPosts);
+postRouter.patch('/edit-post', postController_1.default.editPost);
+postRouter.delete('/delete-comment', commentController_1.default.deleteComment);
+postRouter.post('/report-comment', commentController_1.default.reportComment);
+postRouter.get('/get-all-reported-comments', commentController_1.default.getAllReportedComments);
+postRouter.get('/get-collections', postController_1.default.getCollections);
+postRouter.patch('/list-post', postController_1.default.listPost);
+exports.default = postRouter;
+//# sourceMappingURL=postRouter.js.map

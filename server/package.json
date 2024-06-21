@@ -27,6 +27,7 @@
     "nodemailer": "^6.9.13",
     "socket.io": "^4.7.5",
     "stripe": "^15.9.0",
+    "typescript": "^5.5.2",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
