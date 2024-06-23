@@ -11,7 +11,6 @@ import conversationRouter from "./src/routes/conversationRouter";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import * as dotenv from "dotenv";
-import xssClean from "xss-clean";
 const mongoSanitize = require("express-mongo-sanitize");
 import bodyParser from 'body-parser';
 import freelanceController from "./src/controllers/freelanceController";
@@ -26,7 +25,6 @@ const io = new Server(server, {
   },
 });
 
-app.use(xssClean());
 app.use(mongoSanitize()); 
 app.use(cors());
 
