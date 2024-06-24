@@ -74,7 +74,6 @@ var conversationRouter_1 = __importDefault(require("./src/routes/conversationRou
 var http_1 = require("http");
 var socket_io_1 = require("socket.io");
 var dotenv = __importStar(require("dotenv"));
-var xss_clean_1 = __importDefault(require("xss-clean"));
 var mongoSanitize = require("express-mongo-sanitize");
 var body_parser_1 = __importDefault(require("body-parser"));
 var freelanceController_1 = __importDefault(require("./src/controllers/freelanceController"));
@@ -87,7 +86,6 @@ var io = new socket_io_1.Server(server, {
         origin: "*",
     },
 });
-app.use((0, xss_clean_1.default)());
 app.use(mongoSanitize());
 app.use((0, cors_1.default)());
 app.post('/webhook', express_1.default.raw({ type: 'application/json' }), freelanceController_1.default.webhook);
@@ -96,12 +94,12 @@ app.use(body_parser_1.default.json({ limit: '50mb' }));
 app.use(express_1.default.json());
 app.use((0, express_1.json)({ limit: "50mb" }));
 app.use((0, express_1.urlencoded)({ limit: "50mb", extended: true }));
-app.use(userRoutes_1.default);
-app.use(adminRoutes_1.default);
-app.use(postRouter_1.default);
-app.use(servicRoutes_1.default);
-app.use(conversationRouter_1.default);
-app.use(freelanceRouter_1.default);
+app.use('/api', userRoutes_1.default);
+app.use('/api', adminRoutes_1.default);
+app.use('/api', postRouter_1.default);
+app.use('/api', servicRoutes_1.default);
+app.use('/api', conversationRouter_1.default);
+app.use('/api', freelanceRouter_1.default);
 var users = [];
 var addUser = function (userId, socketId) {
     if (!users.some(function (user) { return user.userId === userId; })) {
@@ -180,7 +178,8 @@ io.on("connection", function (socket) {
         io.emit("notification", userId, text, currentUser);
     });
     socket.on("seen", function (data) {
-        console.log("MEssage seen by", data.recieverId, data.senderId, data.conversationId);
+        console.log(data);
+        console.log("MEssage seen by", data.receiverId, data.senderId, data.conversationId);
         io.emit("msgSeen", data);
     });
     socket.on("disconnect", function () {
