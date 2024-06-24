@@ -35,12 +35,12 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json());
 app.use(json({ limit: "50mb" }));
 app.use(urlencoded({ limit: "50mb", extended: true }));
-app.use(userRouter);
-app.use(adminRouter);
-app.use(postRouter);
-app.use(serviceRouter);
-app.use(conversationRouter);
-app.use(freelanceRouter);
+app.use('/api',userRouter);
+app.use('/api',adminRouter);
+app.use('/api',postRouter);
+app.use('/api',serviceRouter);
+app.use('/api',conversationRouter);
+app.use('/api',freelanceRouter);
 
 interface User {
   userId: string;
@@ -134,7 +134,8 @@ io.on("connection", (socket: Socket) => {
     io.emit("notification", userId, text, currentUser);
   });
   socket.on("seen", (data:any) => {
-    console.log("MEssage seen by",data.recieverId,data.senderId,data.conversationId)
+    console.log(data)
+    console.log("MEssage seen by",data.receiverId,data.senderId,data.conversationId)
     io.emit("msgSeen",data);
   });
 
