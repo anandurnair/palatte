@@ -24,6 +24,7 @@ const generateOTP = () => {
 userController.loginData = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
+    console.log("Working",email,password)
     const user = await UserModal.findOne({ email }).populate('wallet')
     if (!user) {
       return res.status(400).json({ error: "User not exist" });

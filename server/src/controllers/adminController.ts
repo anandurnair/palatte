@@ -148,7 +148,7 @@ adminController.getServiceCounts = async (
 ): Promise<any> => {
   try {
     const allServices = await ServiceModal.find(); 
-      const completedOrders = await OrderModel.find({ status: "completed" });
+      const completedOrders = await OrderModel.find();
 
       const serviceOrderCount = allServices.map((service :any) => ({
         serviceName: service.serviceName,
