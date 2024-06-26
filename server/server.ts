@@ -28,7 +28,7 @@ const io = new Server(server, {
 app.use(mongoSanitize()); 
 app.use(cors());
 
-app.post('/webhook', express.raw({ type: 'application/json' }), freelanceController.webhook);
+app.post('/api/webhook', express.raw({ type: 'application/json' }), freelanceController.webhook);
 // app.post('/orderWebhook', bodyParser.raw({ type: 'application/json' }), freelanceController.servicePaymentByStripeWebhook);
 
 app.use(bodyParser.json({ limit: '50mb' }));

@@ -88,7 +88,7 @@ var io = new socket_io_1.Server(server, {
 });
 app.use(mongoSanitize());
 app.use((0, cors_1.default)());
-app.post('/webhook', express_1.default.raw({ type: 'application/json' }), freelanceController_1.default.webhook);
+app.post('/api/webhook', express_1.default.raw({ type: 'application/json' }), freelanceController_1.default.webhook);
 // app.post('/orderWebhook', bodyParser.raw({ type: 'application/json' }), freelanceController.servicePaymentByStripeWebhook);
 app.use(body_parser_1.default.json({ limit: '50mb' }));
 app.use(express_1.default.json());

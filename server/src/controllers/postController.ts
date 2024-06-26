@@ -309,7 +309,7 @@ postController.deletePost = async (
     await CommentModel.deleteMany({ postId });
     await ReportedPostsModal.deleteMany({ postId });
     const deletedPost = await PostModel.findByIdAndDelete(postId);
-
+    console.log("Delte : ",deletedPost)
     if (!deletedPost) {
       return res
         .status(STATUS_CODES.BAD_REQUEST)

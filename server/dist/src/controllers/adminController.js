@@ -222,7 +222,7 @@ adminController.getServiceCounts = function (req, res) { return __awaiter(void 0
                 return [4 /*yield*/, service_1.default.find()];
             case 1:
                 allServices = _a.sent();
-                return [4 /*yield*/, orders_1.default.find({ status: "completed" })];
+                return [4 /*yield*/, orders_1.default.find()];
             case 2:
                 completedOrders = _a.sent();
                 serviceOrderCount_1 = allServices.map(function (service) { return ({

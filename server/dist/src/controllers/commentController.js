@@ -107,6 +107,7 @@ commentController.addReply = function (req, res) { return __awaiter(void 0, void
                 if (!parentComment) {
                     return [2 /*return*/, res.status(constants_1.default.BAD_REQUEST).json({ error: 'Parent comment not found' })];
                 }
+                console.log("parent Comment");
                 newReply = new comment_1.default({
                     postId: postId,
                     userId: userId,

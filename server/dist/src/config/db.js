@@ -46,8 +46,10 @@ var dbConnect = function () { return __awaiter(void 0, void 0, void 0, function 
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                return [4 /*yield*/, mongoose_1.default.connect(process.env.MONGO_URI)];
+                // await mongoose.connect(process.env.MONGO_URI as string);
+                return [4 /*yield*/, mongoose_1.default.connect('mongodb+srv://anandurpallam:1KWWjDmGeZz0GSPb@cluster0.7douifu.mongodb.net/palatte')];
             case 1:
+                // await mongoose.connect(process.env.MONGO_URI as string);
                 _a.sent();
                 console.log('MongoDB Connected');
                 return [3 /*break*/, 3];

@@ -74,6 +74,7 @@ userController.loginData = function (req, res) { return __awaiter(void 0, void 0
             case 0:
                 _b.trys.push([0, 4, , 5]);
                 _a = req.body, email = _a.email, password = _a.password;
+                console.log("Working", email, password);
                 return [4 /*yield*/, user_1.default.findOne({ email: email }).populate('wallet')];
             case 1:
                 user = _b.sent();

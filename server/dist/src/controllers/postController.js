@@ -442,6 +442,7 @@ postController.deletePost = function (req, res) { return __awaiter(void 0, void 
                 return [4 /*yield*/, post_1.default.findByIdAndDelete(postId)];
             case 3:
                 deletedPost = _a.sent();
+                console.log("Delte : ", deletedPost);
                 if (!deletedPost) {
                     return [2 /*return*/, res
                             .status(constants_1.default.BAD_REQUEST)

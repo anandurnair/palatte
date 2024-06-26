@@ -62,7 +62,7 @@ commentController.addReply = async (
     if (!parentComment) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({ error: 'Parent comment not found' });
     }
-
+    console.log("parent Comment")
     const newReply = new CommentModel({
       postId,
       userId,
