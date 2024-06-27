@@ -193,7 +193,7 @@ adminController.getTransactions = function (req, res) { return __awaiter(void 0,
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                return [4 /*yield*/, orders_1.default.find({ status: "completed" })];
+                return [4 /*yield*/, orders_1.default.find()];
             case 1:
                 orders = _a.sent();
                 return [2 /*return*/, res

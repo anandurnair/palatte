@@ -126,7 +126,7 @@ adminController.getTransactions = async (
   res: Response
 ): Promise<any> => {
   try {
-    const orders = await OrderModel.find({status:"completed"})
+    const orders = await OrderModel.find()
 
     return res
       .status(STATUS_CODES.OK)
