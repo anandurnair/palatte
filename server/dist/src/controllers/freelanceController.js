@@ -1188,7 +1188,7 @@ freelanceController.webhook = function (req, res) { return __awaiter(void 0, voi
             case 0:
                 _a.trys.push([0, 5, , 6]);
                 sig = req.headers["stripe-signature"];
-                endpointSecret = process.env.STRIPE_WEBHOOK_SECRET1;
+                endpointSecret = "whsec_20DBEToBU2OdyW54sYSxMv7rBFxTZxM9";
                 event_1 = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
                 if (!(event_1.type === "payment_intent.succeeded")) return [3 /*break*/, 4];
                 session = event_1.data.object;

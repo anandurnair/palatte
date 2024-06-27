@@ -992,7 +992,7 @@ const handleOrderPayment = async (session: any) => {
 freelanceController.webhook = async (req: Request, res: Response): Promise<any> => {
   try {
     const sig = req.headers["stripe-signature"] as string;
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET1!;
+    const endpointSecret = "whsec_20DBEToBU2OdyW54sYSxMv7rBFxTZxM9";
 
     const event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     if (event.type === "payment_intent.succeeded") {
