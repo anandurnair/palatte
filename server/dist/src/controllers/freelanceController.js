@@ -55,7 +55,7 @@ var constants_1 = __importDefault(require("../utils/constants"));
 var freelanceController = {};
 var cloudinary = require("../utils/cloudinary").cloudinary;
 var review_1 = __importDefault(require("../models/review"));
-var stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+var stripe = require("stripe")("sk_test_51OMD9cSHHtMTvNEWQ8sbS6SsgnPFQHZOJ6zPZnqwC8Ndl2acpSQt425AjrpqVbzVHfgAxIHj2WxWr3LXw6jS15g600KEomNLfV");
 var freelanceDetails_1 = __importDefault(require("../models/freelanceDetails"));
 var orders_1 = __importDefault(require("../models/orders"));
 var mongoose_1 = __importDefault(require("mongoose"));
@@ -597,8 +597,8 @@ freelanceController.addWalletAmount = function (req, res) { return __awaiter(voi
                             },
                         ],
                         mode: "payment",
-                        success_url: "http://localhost:3000/wallet/success",
-                        cancel_url: "http://localhost:3000/wallet/cancel",
+                        success_url: "https://www.palatte.anandu.site/wallet/success",
+                        cancel_url: "https://www.palatte.anandu.site/wallet/cancel",
                         payment_intent_data: {
                             metadata: { userId: userId, method: "wallet" },
                         }
@@ -1240,8 +1240,8 @@ freelanceController.servicePaymentByStripe = function (req, res) { return __awai
                             },
                         ],
                         mode: "payment",
-                        success_url: "http://localhost:3000/hiredHistory/success",
-                        cancel_url: "http://localhost:3000/hiredHistory/cancel",
+                        success_url: "https://www.palatte.anandu.site/hiredHistory/success",
+                        cancel_url: "https://www.palatte.anandu.site/hiredHistory/cancel",
                         payment_intent_data: {
                             metadata: { orderId: orderId, clientId: clientId, freelancerId: freelancerId._id, amount: amount, method: "order" },
                         }

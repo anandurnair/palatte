@@ -79,7 +79,7 @@ var verifyToken = function (req, res, next) { return __awaiter(void 0, void 0, v
 }); };
 var verify = function (token) {
     try {
-        var decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        var decoded = jsonwebtoken_1.default.verify(token, "7e657ddd0578cdf66febd42caf0c66538e68e3d2fcb6a7621706f085588e084e");
         return decoded;
     }
     catch (err) {

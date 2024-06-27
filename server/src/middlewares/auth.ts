@@ -33,7 +33,7 @@ const verifyToken = async(req: Request, res: Response, next: NextFunction): Prom
 const verify = (token: string): DecodedToken => {
   try {
     
-    const decoded: DecodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as DecodedToken;
+    const decoded: DecodedToken = jwt.verify(token,"7e657ddd0578cdf66febd42caf0c66538e68e3d2fcb6a7621706f085588e084e") as DecodedToken;
     return decoded;
   } catch (err) {
     console.error('Token verification2 failed:', (err as Error).message);

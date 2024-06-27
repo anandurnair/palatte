@@ -4,7 +4,7 @@ import STATUS_CODES from "../utils/constants";
 const freelanceController: any = {};
 const { cloudinary } = require("../utils/cloudinary");
 import ReviewsModal from "../models/review";
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")("sk_test_51OMD9cSHHtMTvNEWQ8sbS6SsgnPFQHZOJ6zPZnqwC8Ndl2acpSQt425AjrpqVbzVHfgAxIHj2WxWr3LXw6jS15g600KEomNLfV");
 import FreelanceDetailsModel from "../models/freelanceDetails";
 import OrderModel from "../models/orders";
 import mongoose from "mongoose";
@@ -502,8 +502,8 @@ freelanceController.addWalletAmount = async (req: Request, res: Response): Promi
         },
       ],
       mode: "payment",
-      success_url: "http://localhost:3000/wallet/success",
-      cancel_url: "http://localhost:3000/wallet/cancel",
+      success_url: "https://www.palatte.anandu.site/wallet/success",
+      cancel_url: "https://www.palatte.anandu.site/wallet/cancel",
       payment_intent_data: {
         metadata: { userId ,method : "wallet"},
       }
@@ -1040,8 +1040,8 @@ freelanceController.servicePaymentByStripe = async (req: Request, res: Response)
         },
       ],
       mode: "payment",
-      success_url: "http://localhost:3000/hiredHistory/success",
-      cancel_url: "http://localhost:3000/hiredHistory/cancel",
+      success_url: "https://www.palatte.anandu.site/hiredHistory/success",
+      cancel_url: "https://www.palatte.anandu.site/hiredHistory/cancel",
       payment_intent_data: {
         metadata: { orderId, clientId, freelancerId:freelancerId._id, amount ,method:"order"},
       }
