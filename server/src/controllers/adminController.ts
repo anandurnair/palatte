@@ -148,30 +148,27 @@ adminController.getServiceCounts = async (
 ): Promise<any> => {
   try {
     const allServices = await ServiceModal.find(); 
-      const completedOrders = await OrderModel.find();
+    const completedOrders = await OrderModel.find();
 
-      const serviceOrderCount = allServices.map((service :any) => ({
-        serviceName: service.serviceName,
-        orderCount: 0
-      }));
+    const serviceOrderCount = allServices.map((service) => ({
+      serviceName: service.serviceName,
+      orderCount: 0
+    }));
 
-      completedOrders.forEach(order => {
-        const service = serviceOrderCount.find(s => s.serviceName === order.serviceName);
-        if (service) {
-          service.orderCount += 1;
-        }
-      });
-    return res
-      .status(STATUS_CODES.OK)
-      .json({
-        message: "Data fetched successfully",
-        serviceOrderCount
-      });
+    completedOrders.forEach(order => {
+      const service = serviceOrderCount.find(s => s.serviceName === order.serviceName);
+      if (service) {
+        service.orderCount += 1;
+      }
+    });
+
+    return res.status(STATUS_CODES.OK).json({
+      message: "Data fetched successfully",
+      serviceOrderCount
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
-      .json({ error: "Internal server error" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
 
