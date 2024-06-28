@@ -235,18 +235,14 @@ adminController.getServiceCounts = function (req, res) { return __awaiter(void 0
                         service.orderCount += 1;
                     }
                 });
-                return [2 /*return*/, res
-                        .status(constants_1.default.OK)
-                        .json({
+                return [2 /*return*/, res.status(constants_1.default.OK).json({
                         message: "Data fetched successfully",
                         serviceOrderCount: serviceOrderCount_1
                     })];
             case 3:
                 error_5 = _a.sent();
                 console.error(error_5);
-                res
-                    .status(constants_1.default.INTERNAL_SERVER_ERROR)
-                    .json({ error: "Internal server error" });
+                res.status(constants_1.default.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
                 return [3 /*break*/, 4];
             case 4: return [2 /*return*/];
         }

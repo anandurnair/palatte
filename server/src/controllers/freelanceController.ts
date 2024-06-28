@@ -555,7 +555,7 @@ freelanceController.addWalletSuccessfull = async (
       amount: amountToAdd,
       type: "credit",
       payer: new mongoose.Types.ObjectId(BANK_OBJECT_ID), // Use ObjectId for the bank
-      date: formattedDate,
+      date: new Date(),
     });
 
     // Save the wallet
@@ -649,7 +649,7 @@ freelanceController.servicePaymentPending = async (
       amount: amount,
       type: "debit",
       payer: freelancerId,
-      date: formattedDate,
+      date: new Date(),
     });
 
     await clientWallet.save();
@@ -694,7 +694,7 @@ freelanceController.workUncomplete = async (
       amount: amountToAdd,
       type: "credit",
       payer: payment.clientId,
-      date: formattedDate,
+      date: new Date(),
     });
 
     await PendingPaymentModel.findByIdAndDelete(payment._id);
@@ -775,7 +775,7 @@ freelanceController.approveWork = async (
       amount: amountToAdd,
       type: "credit",
       payer: payment.clientId, // Use ObjectId for the bank
-      date: formattedDate,
+      date: new Date(),
     });
 
     await PendingPaymentModel.findByIdAndDelete(payment._id);
@@ -959,7 +959,7 @@ const handleCheckoutSessionCompleted = async (session: any) => {
       amount: addAmount,
       type: "credit",
       payer: new mongoose.Types.ObjectId(BANK_OBJECT_ID),
-      date: formattedDate,
+      date: new Date(),
     });
 
     await wallet.save();

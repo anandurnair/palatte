@@ -653,7 +653,7 @@ freelanceController.addWalletSuccessfull = function (req, res) { return __awaite
                     amount: amountToAdd,
                     type: "credit",
                     payer: new mongoose_1.default.Types.ObjectId(BANK_OBJECT_ID), // Use ObjectId for the bank
-                    date: formattedDate,
+                    date: new Date(),
                 });
                 // Save the wallet
                 return [4 /*yield*/, wallet.save()];
@@ -757,7 +757,7 @@ freelanceController.servicePaymentPending = function (req, res) { return __await
                     amount: amount,
                     type: "debit",
                     payer: freelancerId,
-                    date: formattedDate,
+                    date: new Date(),
                 });
                 return [4 /*yield*/, clientWallet.save()];
             case 6:
@@ -808,7 +808,7 @@ freelanceController.workUncomplete = function (req, res) { return __awaiter(void
                     amount: amountToAdd,
                     type: "credit",
                     payer: payment.clientId,
-                    date: formattedDate,
+                    date: new Date(),
                 });
                 return [4 /*yield*/, pendingPayments_1.default.findByIdAndDelete(payment._id)];
             case 4:
@@ -908,7 +908,7 @@ freelanceController.approveWork = function (req, res) { return __awaiter(void 0,
                     amount: amountToAdd,
                     type: "credit",
                     payer: payment.clientId, // Use ObjectId for the bank
-                    date: formattedDate,
+                    date: new Date(),
                 });
                 return [4 /*yield*/, pendingPayments_1.default.findByIdAndDelete(payment._id)];
             case 4:
@@ -1134,7 +1134,7 @@ var handleCheckoutSessionCompleted = function (session) { return __awaiter(void 
                     amount: addAmount,
                     type: "credit",
                     payer: new mongoose_1.default.Types.ObjectId(BANK_OBJECT_ID),
-                    date: formattedDate,
+                    date: new Date(),
                 });
                 return [4 /*yield*/, wallet.save()];
             case 4:

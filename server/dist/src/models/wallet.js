@@ -41,7 +41,7 @@ var TransactionSchema = new mongoose_1.Schema({
         required: true
     },
     date: {
-        type: String,
+        type: Date,
     }
 });
 var WalletSchema = new mongoose_1.Schema({
